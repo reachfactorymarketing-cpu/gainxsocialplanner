@@ -52,7 +52,13 @@ export default function People() {
     <div className="space-y-4 max-w-4xl">
       <ContextualTooltip screen="people" />
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">People & Roles</h1>
+        <div>
+          <h1 className="text-xl font-bold">People & Roles</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+            {onlineUsers.length} online
+          </p>
+        </div>
         {isAdmin && (
           <button onClick={() => setShowAdd(true)} className="gradient-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
             <UserPlus size={16} /> Add Person
