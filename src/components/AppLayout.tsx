@@ -20,7 +20,7 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { user, isGuest, signOut } = useAuthStore();
+  const { user, isGuest, signOut, setGuest } = useAuthStore();
   const { role, isAdmin, isGuestRole } = useRole();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
