@@ -26,17 +26,36 @@ export default function Dashboard() {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
+      // Build task query based on role
+      let taskQuery = supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50);
+      if (role === 'zone_lead' && user?.zone) taskQuery = taskQuery.eq('zone', user.zone);
+      else if (role === 'volunteer' || role === 'instructor' || role === 'reset_space_partner') {
+        if (user?.id) taskQuery = taskQuery.eq('assignee_id', user.id);
+      }
+      else if (role === 'vendor') taskQuery = taskQuery.limit(0); // vendors don't see tasks
+
+      // Build schedule query based on role
+      let scheduleQuery = supabase.from('schedule_slots').select('*').order('time', { ascending: true });
+      if (isGuestRole) scheduleQuery = scheduleQuery.eq('phase', 'event');
+
+      // Build docs query
+      let docsQuery = supabase.from('documents').select('*').eq('pinned', true);
+      if (!isAdmin) docsQuery = docsQuery.eq('permissions_level', 'all');
+
+      // Build messages query - use role-appropriate channel
+      const msgChannel = role === 'vendor' ? '#vendor-row' : '#all-hands';
+
       const [tasksRes, scheduleRes, docsRes, msgRes, profilesRes] = await Promise.all([
-        supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50),
-        supabase.from('schedule_slots').select('*').order('time', { ascending: true }),
-        supabase.from('documents').select('*').eq('pinned', true),
-        supabase.from('messages').select('*').eq('channel', '#all-hands').order('created_at', { ascending: false }).limit(3),
+        taskQuery,
+        scheduleQuery,
+        docsQuery,
+        isGuestRole ? Promise.resolve({ data: [] }) : supabase.from('messages').select('*').eq('channel', msgChannel).order('created_at', { ascending: false }).limit(3),
         supabase.from('profiles').select('id, name, role, avatar_url'),
       ]);
       setTasks(tasksRes.data || []);
       setSchedule(scheduleRes.data || []);
       setPinnedDocs(docsRes.data || []);
-      setRecentMessages((msgRes.data || []).reverse());
+      setRecentMessages(((msgRes as any).data || []).reverse());
       const map: Record<string, any> = {};
       profilesRes.data?.forEach(p => { map[p.id] = p; });
       setProfiles(map);
@@ -45,7 +64,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [role, user?.zone, user?.id, isAdmin, isGuestRole]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
