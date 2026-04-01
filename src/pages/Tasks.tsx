@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
+import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge, PriorityBadge } from '@/components/Badges';
 import { TASK_COLUMNS, ZONES, type TaskStatus } from '@/lib/constants';
 import { humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
-import { Plus, X, GripVertical, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Plus, X, MessageSquare } from 'lucide-react';
+import KanbanColumn from '@/components/tasks/KanbanColumn';
+import TaskCard from '@/components/tasks/TaskCard';
 
 export default function Tasks() {
   const { user } = useAuthStore();
@@ -15,6 +18,11 @@ export default function Tasks() {
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [activeTask, setActiveTask] = useState<any | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const fetchTasks = useCallback(async () => {
     const { data } = await supabase.from('tasks').select('*').order('created_at', { ascending: false });
@@ -36,7 +44,52 @@ export default function Tasks() {
   const moveTask = async (taskId: string, newStatus: TaskStatus) => {
     await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-    if (selectedTask?.id === taskId) setSelectedTask({ ...selectedTask, status: newStatus });
+    if (selectedTask?.id === taskId) setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = tasks.find(t => t.id === event.active.id);
+    setActiveTask(task || null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveTask(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const taskId = active.id as string;
+    // over.id is the column status name (droppable id)
+    const newStatus = TASK_COLUMNS.includes(over.id as TaskStatus)
+      ? (over.id as TaskStatus)
+      : tasks.find(t => t.id === over.id)?.status;
+
+    if (!newStatus) return;
+    const currentTask = tasks.find(t => t.id === taskId);
+    if (currentTask && currentTask.status !== newStatus) {
+      moveTask(taskId, newStatus);
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const taskId = active.id as string;
+    let newStatus: TaskStatus | undefined;
+
+    if (TASK_COLUMNS.includes(over.id as TaskStatus)) {
+      newStatus = over.id as TaskStatus;
+    } else {
+      const overTask = tasks.find(t => t.id === over.id);
+      newStatus = overTask?.status;
+    }
+
+    if (newStatus) {
+      const currentTask = tasks.find(t => t.id === taskId);
+      if (currentTask && currentTask.status !== newStatus) {
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+      }
+    }
   };
 
   if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-muted rounded-xl animate-pulse" />)}</div>;
@@ -46,7 +99,7 @@ export default function Tasks() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Task Board</h1>
         {canManageTasks && (
-          <button onClick={() => setShowCreate(true)} className="gradient-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
+          <button onClick={() => setShowCreate(true)} className="gradient-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
             <Plus size={16} /> New Task
           </button>
         )}
@@ -59,7 +112,7 @@ export default function Tasks() {
             key={z}
             onClick={() => setZoneFilter(z)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
-              zoneFilter === z ? 'gradient-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
+              zoneFilter === z ? 'gradient-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
             {z}
@@ -67,78 +120,45 @@ export default function Tasks() {
         ))}
       </div>
 
-      {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {TASK_COLUMNS.map((col) => {
-          const colTasks = filtered.filter(t => t.status === col);
-          return (
-            <div key={col} className="bg-muted/50 rounded-xl p-3 min-h-[300px]">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold">{col}</h3>
-                <span className="text-xs text-muted-foreground bg-background rounded-full px-2 py-0.5">{colTasks.length}</span>
-              </div>
-              <div className="space-y-2">
-                {colTasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onClick={() => setSelectedTask(task)}
-                    onMove={moveTask}
-                    canManage={canManageTasks && !isGuestRole}
-                  />
-                ))}
-                {colTasks.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-8">No tasks</p>
-                )}
+      {/* Kanban Board with DnD */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {TASK_COLUMNS.map((col) => (
+            <KanbanColumn
+              key={col}
+              status={col}
+              tasks={filtered.filter(t => t.status === col)}
+              onTaskClick={setSelectedTask}
+              canManage={canManageTasks && !isGuestRole}
+            />
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeTask && (
+            <div className="bg-card rounded-lg p-3 border shadow-lg opacity-90 w-64">
+              <p className="text-sm font-medium">{activeTask.title}</p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <ZoneBadge zone={activeTask.zone} />
+                <PriorityBadge priority={activeTask.priority} />
               </div>
             </div>
-          );
-        })}
-      </div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
-      {/* Task Detail Drawer */}
       {selectedTask && (
-        <TaskDrawer
-          task={selectedTask}
-          onClose={() => setSelectedTask(null)}
-          onMove={moveTask}
-          canManage={canManageTasks && !isGuestRole}
-        />
+        <TaskDrawer task={selectedTask} onClose={() => setSelectedTask(null)} onMove={moveTask} canManage={canManageTasks && !isGuestRole} />
       )}
 
-      {/* Create Task Modal */}
       {showCreate && (
-        <CreateTaskModal
-          onClose={() => setShowCreate(false)}
-          onCreated={fetchTasks}
-          userId={user?.id}
-        />
-      )}
-    </div>
-  );
-}
-
-function TaskCard({ task, onClick, onMove, canManage }: { task: any; onClick: () => void; onMove: (id: string, s: TaskStatus) => void; canManage: boolean }) {
-  const done = task.status === 'Done';
-  return (
-    <div
-      onClick={onClick}
-      className={`bg-card rounded-lg p-3 border cursor-pointer hover:shadow-md transition ${
-        done ? 'border-l-4 border-l-green-400 border-border' :
-        isOverdue(task.due_date) ? 'border-l-4 border-l-red-400 border-border' :
-        isDueToday(task.due_date) ? 'border-l-4 border-l-amber-400 border-border' :
-        'border-l-4 border-l-transparent border-border'
-      }`}
-    >
-      <p className={`text-sm font-medium ${done ? 'line-through text-muted-foreground' : ''}`}>{task.title}</p>
-      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-        <ZoneBadge zone={task.zone} />
-        <PriorityBadge priority={task.priority} />
-      </div>
-      {task.due_date && (
-        <p className={`text-xs mt-1.5 ${isOverdue(task.due_date) ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-          {humanDate(task.due_date)}
-        </p>
+        <CreateTaskModal onClose={() => setShowCreate(false)} onCreated={fetchTasks} userId={user?.id} />
       )}
     </div>
   );
@@ -181,27 +201,17 @@ function TaskDrawer({ task, onClose, onMove, canManage }: { task: any; onClose: 
             <PriorityBadge priority={task.priority} />
             <span className="text-xs text-muted-foreground">{humanDate(task.due_date)}</span>
           </div>
-          
           {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
-
-          {/* Status Buttons */}
           {canManage && (
             <div className="flex gap-2 flex-wrap">
               {TASK_COLUMNS.map((col) => (
-                <button
-                  key={col}
-                  onClick={() => onMove(task.id, col)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                    task.status === col ? 'gradient-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
-                  }`}
-                >
+                <button key={col} onClick={() => onMove(task.id, col)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium ${task.status === col ? 'gradient-primary text-white' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>
                   {col}
                 </button>
               ))}
             </div>
           )}
-
-          {/* Checklist */}
           <div>
             <h3 className="text-sm font-semibold mb-2">Checklist</h3>
             {checklist.length === 0 ? (
@@ -217,8 +227,6 @@ function TaskDrawer({ task, onClose, onMove, canManage }: { task: any; onClose: 
               </div>
             )}
           </div>
-
-          {/* Comments */}
           <div>
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5"><MessageSquare size={14} /> Comments</h3>
             <div className="space-y-2 mb-3">
@@ -228,14 +236,10 @@ function TaskDrawer({ task, onClose, onMove, canManage }: { task: any; onClose: 
             </div>
             {!useAuthStore.getState().isGuest && (
               <div className="flex gap-2">
-                <input
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
+                <input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment..."
                   className="flex-1 text-sm border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  onKeyDown={(e) => e.key === 'Enter' && addComment()}
-                />
-                <button onClick={addComment} className="px-3 py-2 gradient-primary text-primary-foreground rounded-lg text-sm">Send</button>
+                  onKeyDown={(e) => e.key === 'Enter' && addComment()} />
+                <button onClick={addComment} className="px-3 py-2 gradient-primary text-white rounded-lg text-sm">Send</button>
               </div>
             )}
           </div>
@@ -288,7 +292,7 @@ function CreateTaskModal({ onClose, onCreated, userId }: { onClose: () => void; 
             </select>
           </div>
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background" />
-          <button type="submit" disabled={saving} className="w-full gradient-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium disabled:opacity-50">
+          <button type="submit" disabled={saving} className="w-full gradient-primary text-white rounded-lg py-2.5 text-sm font-medium disabled:opacity-50">
             {saving ? 'Creating...' : 'Create Task'}
           </button>
         </form>
