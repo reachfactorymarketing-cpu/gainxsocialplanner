@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -54,6 +55,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <ConnectionStatus />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
