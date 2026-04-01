@@ -31,7 +31,7 @@ export default function Dashboard() {
     fetch();
   }, [user]);
 
-  const myTasks = isGuestRole ? tasks : tasks.filter(t => t.assignee_id === user?.id);
+  const myTasks = isAdmin ? tasks : isGuestRole ? tasks : tasks.filter(t => t.assignee_id === user?.id);
   const openTasks = myTasks.filter(t => t.status !== 'Done');
   const overdueTasks = openTasks.filter(t => isOverdue(t.due_date));
   const days = daysUntilEvent();
