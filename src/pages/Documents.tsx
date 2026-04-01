@@ -10,6 +10,7 @@ import {
   Info, ChevronDown, ChevronUp, FolderOpen
 } from 'lucide-react';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { toast } from 'sonner';
 
 const FOLDERS = ['All', 'Marketing', 'Operations', 'Vendors', 'Finance', 'Creative', 'Templates'];
