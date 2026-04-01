@@ -150,39 +150,31 @@ export default function Tasks() {
         ))}
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
+      {canDragDrop ? (
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {TASK_COLUMNS.map((col) => (
+              <KanbanColumn key={col} status={col} tasks={filtered.filter(t => t.status === col)} onTaskClick={setSelectedTask}
+                canManage={true} onAddTask={handleAddTask} profiles={profiles} />
+            ))}
+          </div>
+          <DragOverlay>
+            {activeTask && (
+              <div className="bg-card rounded-lg p-3 border shadow-lg opacity-90 w-64">
+                <p className="text-sm font-medium">{activeTask.title}</p>
+                <div className="flex items-center gap-1.5 mt-2"><ZoneBadge zone={activeTask.zone} /><PriorityBadge priority={activeTask.priority} /></div>
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {TASK_COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col}
-              status={col}
-              tasks={filtered.filter(t => t.status === col)}
-              onTaskClick={setSelectedTask}
-              canManage={canManageTasks && !isGuestRole}
-              onAddTask={canManageTasks ? handleAddTask : undefined}
-              profiles={profiles}
-            />
+            <KanbanColumn key={col} status={col} tasks={filtered.filter(t => t.status === col)} onTaskClick={setSelectedTask}
+              canManage={false} profiles={profiles} />
           ))}
         </div>
-
-        <DragOverlay>
-          {activeTask && (
-            <div className="bg-card rounded-lg p-3 border shadow-lg opacity-90 w-64">
-              <p className="text-sm font-medium">{activeTask.title}</p>
-              <div className="flex items-center gap-1.5 mt-2">
-                <ZoneBadge zone={activeTask.zone} />
-                <PriorityBadge priority={activeTask.priority} />
-              </div>
-            </div>
-          )}
-        </DragOverlay>
-      </DndContext>
+      )}
 
       {selectedTask && (
         <TaskDrawer task={selectedTask} onClose={() => setSelectedTask(null)} onMove={moveTask} canManage={canManageTasks && !isGuestRole} profiles={profiles} onRefresh={fetchTasks} />
