@@ -252,6 +252,7 @@ export default function Dashboard() {
           </>
         )}
       </div>
+      )}
 
       {pinnedDocs.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
