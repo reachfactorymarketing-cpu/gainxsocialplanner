@@ -113,11 +113,45 @@ export default function AppLayout() {
             </div>
           )}
           <NotificationBell />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-              {(user?.name || 'G')[0].toUpperCase()}
-            </div>
-          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  (user?.name || 'G')[0].toUpperCase()
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56 p-3 space-y-2">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user?.name || 'G')[0].toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{isGuest ? 'Guest' : user?.name}</p>
+                  <RoleBadge role={role} />
+                </div>
+              </div>
+              {!isGuest && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition"
+                >
+                  <Camera size={16} /> {uploading ? 'Uploading...' : 'Upload Photo'}
+                </button>
+              )}
+              <button onClick={handleSignOut} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition">
+                <LogOut size={16} /> {isGuest ? 'Exit Guest Mode' : 'Sign Out'}
+              </button>
+            </PopoverContent>
+          </Popover>
         </header>
 
         {/* Mobile Nav Overlay */}
