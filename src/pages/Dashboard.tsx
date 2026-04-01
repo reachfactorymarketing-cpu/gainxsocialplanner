@@ -49,7 +49,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Hero */}
-      <div className="rounded-2xl p-6 text-white" style={{background: "linear-gradient(135deg, #7C3AED, #F97316)"}}>
+      <div className="rounded-2xl p-6 text-white" style={{background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #F97316 100%)'}}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-lg">
             {(user?.name || "G")[0].toUpperCase()}

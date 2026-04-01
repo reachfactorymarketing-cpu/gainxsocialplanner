@@ -116,9 +116,10 @@ export default function AppLayout() {
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                        isActive ? 'gradient-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+                        isActive ? 'text-white' : 'text-muted-foreground hover:bg-accent'
                       }`
                     }
+                    style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #F97316)' } : {}}
                   >
                     <item.icon size={18} />
                     {item.label}
