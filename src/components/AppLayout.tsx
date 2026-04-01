@@ -32,7 +32,11 @@ export default function AppLayout() {
   });
 
   const handleSignOut = async () => {
-    await signOut();
+    if (isGuest) {
+      setGuest(false);
+    } else {
+      await signOut();
+    }
     navigate('/login');
   };
 
