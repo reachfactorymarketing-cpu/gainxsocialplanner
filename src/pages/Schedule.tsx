@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge } from '@/components/Badges';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { Plus, X, Calendar } from 'lucide-react';
 import { ZONES } from '@/lib/constants';
 

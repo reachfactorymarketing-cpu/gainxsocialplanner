@@ -103,6 +103,7 @@ export default function Tasks() {
 
   return (
     <div className="space-y-4">
+      <ContextualTooltip screen="tasks" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Task Board</h1>
         {canManageTasks && (
