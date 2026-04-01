@@ -149,10 +149,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* My Tasks - FIX 6: no Done tasks, max 6, sorted */}
+      {/* My Tasks - hide for vendors */}
+      {role !== 'vendor' && (
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-          <h2 className="font-semibold mb-3 flex items-center gap-2"><CheckSquare size={18} /> My Tasks</h2>
+          <h2 className="font-semibold mb-3 flex items-center gap-2"><CheckSquare size={18} /> {isAdmin ? 'All Tasks' : 'My Tasks'}</h2>
           {openTasks.length === 0 ? (
             <div className="text-center py-6">
               <CheckSquare className="mx-auto mb-2 text-muted-foreground" size={32} />
