@@ -4,11 +4,13 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge } from '@/components/Badges';
 import { NotificationBell } from '@/components/NotificationBell';
 import logo from '@/assets/GainX_logo.png';
-import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Camera, User, MoreHorizontal } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Camera, User, HelpCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ProfileSettingsModal from '@/components/ProfileSettingsModal';
+import WelcomeTour from '@/components/WelcomeTour';
+import HelpCenter from '@/components/HelpCenter';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard', roles: 'all' },
@@ -37,7 +39,16 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Show tour on first login
+  useEffect(() => {
+    if (user && !user.has_seen_welcome && !isGuest) {
+      setShowTour(true);
+    }
+  }, [user, isGuest]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +76,11 @@ export default function AppLayout() {
       await signOut();
     }
     navigate('/login');
+  };
+
+  const handleReplayTour = () => {
+    setShowHelp(false);
+    setShowTour(true);
   };
 
   return (
@@ -229,6 +245,19 @@ export default function AppLayout() {
         ))}
       </nav>
 
+      {/* Help Center FAB */}
+      <button
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-6 right-6 w-12 h-12 rounded-full text-white shadow-lg z-40 flex items-center justify-center hover:opacity-90 transition lg:bottom-6"
+        style={{ background: 'linear-gradient(135deg, #7C3AED, #F97316)' }}
+        title="Help Center"
+      >
+        <HelpCircle size={22} />
+      </button>
+
+      {/* Modals */}
+      {showTour && <WelcomeTour onClose={() => setShowTour(false)} onNavigate={(route) => navigate(route)} />}
+      {showHelp && <HelpCenter onClose={() => setShowHelp(false)} onReplayTour={handleReplayTour} />}
       {showProfileSettings && <ProfileSettingsModal onClose={() => setShowProfileSettings(false)} />}
     </div>
   );

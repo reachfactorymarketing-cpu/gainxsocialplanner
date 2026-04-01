@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { ZONES, ZONE_COLORS } from '@/lib/constants';
 import { daysUntilEvent } from '@/lib/dateUtils';
 import { BarChart3, CheckSquare, AlertTriangle, CalendarDays, DollarSign } from 'lucide-react';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 
 export default function Reports() {
   const { user } = useAuthStore();
@@ -42,6 +43,7 @@ export default function Reports() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      <ContextualTooltip screen="reports" />
       <h1 className="text-xl font-bold">Reports</h1>
 
       {/* Metric Cards */}

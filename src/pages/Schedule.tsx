@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge } from '@/components/Badges';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { Plus, X, Calendar } from 'lucide-react';
 import { ZONES } from '@/lib/constants';
 
@@ -42,6 +43,7 @@ export default function Schedule() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      <ContextualTooltip screen="schedule" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Master Schedule</h1>
         {canManageSchedule && (

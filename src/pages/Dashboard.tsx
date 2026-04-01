@@ -7,7 +7,7 @@ import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtil
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
 import { CalendarDays, CheckSquare, FileText, MessageCircle, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import WelcomeModal from '@/components/WelcomeModal';
+
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Dashboard() {
@@ -20,13 +20,8 @@ export default function Dashboard() {
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(false);
+  
 
-  useEffect(() => {
-    if (user && !user.has_seen_welcome && !isGuest) {
-      setShowWelcome(true);
-    }
-  }, [user, isGuest]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -87,7 +82,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
+      
 
       {/* Hero */}
       <div className="rounded-2xl p-6 text-white" style={{background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #F97316 100%)'}}>

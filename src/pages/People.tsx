@@ -5,6 +5,7 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge, ZoneBadge } from '@/components/Badges';
 import { Search, UserPlus, X, Edit2, Users } from 'lucide-react';
 import { ZONES, ROLE_LABELS, type AppRole } from '@/lib/constants';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 
 const ROLES: AppRole[] = ['admin', 'zone_lead', 'volunteer', 'instructor', 'vendor', 'reset_space_partner'];
 
@@ -44,6 +45,7 @@ export default function People() {
 
   return (
     <div className="space-y-4 max-w-4xl">
+      <ContextualTooltip screen="people" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">People & Roles</h1>
         {isAdmin && (

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge, PriorityBadge, RoleBadge } from '@/components/Badges';
 import { TASK_COLUMNS, ZONES, type TaskStatus } from '@/lib/constants';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { Plus, X, MessageSquare, Save, Trash2 } from 'lucide-react';
 import KanbanColumn from '@/components/tasks/KanbanColumn';
@@ -102,6 +103,7 @@ export default function Tasks() {
 
   return (
     <div className="space-y-4">
+      <ContextualTooltip screen="tasks" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Task Board</h1>
         {canManageTasks && (
