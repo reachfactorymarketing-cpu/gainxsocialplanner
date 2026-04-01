@@ -23,7 +23,13 @@ const queryClient = new QueryClient();
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, isGuest, isLoading, initialize } = useAuthStore();
 
-  useEffect(() => { initialize(); }, [initialize]);
+  useEffect(() => {
+    initialize();
+    const timeout = setTimeout(() => {
+      useAuthStore.setState({ isLoading: false });
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [initialize]);
 
   if (isLoading) {
     return (
