@@ -246,6 +246,44 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {isAdmin && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Eye size={16} className="text-muted-foreground" />
+            <h2 className="font-semibold text-sm">Quick Role Preview</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">Preview the app as any role without logging out</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {[
+              { key: 'admin', label: 'Admin View', badge: 'Admin', color: 'bg-gainx-purple' },
+              { key: 'lead', label: 'Zone Lead', badge: 'Zone Lead', color: 'bg-gainx-teal' },
+              { key: 'volunteer', label: 'Volunteer', badge: 'Volunteer', color: 'bg-gainx-blue' },
+              { key: 'vendor', label: 'Vendor', badge: 'Vendor', color: 'bg-gainx-orange' },
+              { key: 'instructor', label: 'Instructor', badge: 'Instructor', color: 'bg-gainx-amber' },
+              { key: 'guest', label: 'Guest View', badge: 'Guest', color: 'bg-gainx-gray' },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => {
+                  if (item.key === 'guest') {
+                    window.open('/?guest=true', '_blank');
+                  } else {
+                    window.open(`/login?preview=${item.key}`, '_blank');
+                  }
+                }}
+                className="relative text-left border border-border rounded-xl p-3 hover:border-primary/40 hover:bg-accent/50 transition-all"
+              >
+                <ExternalLink size={12} className="absolute top-2 right-2 text-muted-foreground" />
+                <span className={`inline-block text-[10px] font-semibold text-white px-2 py-0.5 rounded-full mb-1 ${item.color}`}>
+                  {item.badge}
+                </span>
+                <p className="text-xs font-semibold">{item.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
