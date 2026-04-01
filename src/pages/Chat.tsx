@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { RoleBadge } from '@/components/Badges';
 import { CHANNELS } from '@/lib/constants';
 import { Send, Hash } from 'lucide-react';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { usePresence } from '@/hooks/usePresence';
 
 export default function Chat() {
   const { user } = useAuthStore();
@@ -12,7 +14,9 @@ export default function Chat() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { onlineUsers } = usePresence();
 
   useEffect(() => {
     supabase.from('profiles').select('id, name, role, avatar_url').then(({ data }) => {
@@ -22,27 +26,45 @@ export default function Chat() {
     });
   }, []);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      const { data } = await supabase.from('messages').select('*').eq('channel', channel).order('created_at', { ascending: true }).limit(100);
-      setMessages(data || []);
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    };
-    fetchMessages();
-    const sub = supabase.channel(`chat-${channel}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `channel=eq.${channel}` }, (payload) => {
-        setMessages(prev => [...prev, payload.new]);
-        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(sub); };
+  const fetchMessages = useCallback(async () => {
+    const { data } = await supabase.from('messages').select('*').eq('channel', channel).order('created_at', { ascending: true }).limit(100);
+    setMessages(data || []);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   }, [channel]);
 
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
+  useRealtimeSubscription('messages', fetchMessages, `channel=eq.${channel}`);
+
   const send = async () => {
-    if (!text.trim() || !user) return;
-    await supabase.from('messages').insert({ channel, sender_id: user.id, text: text.trim() });
+    if (!text.trim() || !user || sending) return;
+    const msgText = text.trim();
     setText('');
+    
+    // Optimistic: add message immediately with temp id
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg = {
+      id: tempId,
+      channel,
+      sender_id: user.id,
+      text: msgText,
+      created_at: new Date().toISOString(),
+      _sending: true,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+    setSending(true);
+    const { error } = await supabase.from('messages').insert({ channel, sender_id: user.id, text: msgText });
+    setSending(false);
+    
+    if (error) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+    }
+    // Realtime subscription will bring the real message
   };
+
+  const onlineInChannel = onlineUsers.length;
 
   return (
     <div>
@@ -60,6 +82,10 @@ export default function Chat() {
             <Hash size={14} /> {ch.replace('#', '')}
           </button>
         ))}
+        <div className="mt-3 px-2 text-xs text-muted-foreground">
+          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+          {onlineInChannel} online
+        </div>
       </div>
 
       {/* Messages */}
@@ -71,8 +97,12 @@ export default function Chat() {
           </select>
         </div>
 
-        <div className="p-3 border-b border-border">
+        <div className="p-3 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-sm flex items-center gap-1.5"><Hash size={16} /> {channel.replace('#', '')}</h2>
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+            {onlineInChannel} online
+          </span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -84,7 +114,7 @@ export default function Chat() {
             const sender = profiles[msg.sender_id];
             return (
               <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] ${isMine ? 'gradient-primary text-primary-foreground' : 'bg-muted'} rounded-xl px-3.5 py-2.5`}>
+                <div className={`max-w-[75%] ${isMine ? 'gradient-primary text-primary-foreground' : 'bg-muted'} rounded-xl px-3.5 py-2.5 ${msg._sending ? 'opacity-60' : ''}`}>
                   {!isMine && sender && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-xs font-semibold">{sender.name}</span>
@@ -93,7 +123,7 @@ export default function Chat() {
                   )}
                   <p className="text-sm">{msg.text}</p>
                   <p className={`text-[10px] mt-1 ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {msg._sending ? 'Sending...' : new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>
@@ -110,7 +140,7 @@ export default function Chat() {
             className="flex-1 text-sm border border-input rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             onKeyDown={e => e.key === 'Enter' && send()}
           />
-          <button onClick={send} className="gradient-primary text-primary-foreground p-2.5 rounded-lg"><Send size={16} /></button>
+          <button onClick={send} disabled={sending} className="gradient-primary text-primary-foreground p-2.5 rounded-lg disabled:opacity-50"><Send size={16} /></button>
         </div>
       </div>
     </div>

@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { Megaphone, Plus, Trash2, X, Eye } from 'lucide-react';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export default function Announcements() {
   const { user } = useAuthStore();
@@ -10,19 +12,14 @@ export default function Announcements() {
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = useCallback(async () => {
     const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
     setAnnouncements(data || []);
     setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchAnnouncements();
-    const channel = supabase.channel('announcements-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, fetchAnnouncements)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
+  useRealtimeSubscription('announcements', fetchAnnouncements);
 
   const handleDelete = async () => {
     if (!deleteId) return;

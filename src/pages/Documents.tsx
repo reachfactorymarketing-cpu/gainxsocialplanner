@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
@@ -10,6 +10,7 @@ import {
   Info, ChevronDown, ChevronUp, FolderOpen
 } from 'lucide-react';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { toast } from 'sonner';
 
 const FOLDERS = ['All', 'Marketing', 'Operations', 'Vendors', 'Finance', 'Creative', 'Templates'];
@@ -247,16 +248,18 @@ function DocumentsTab() {
     setTipDismissed(true);
   };
 
-  const fetchDocs = async () => {
+  const fetchDocs = useCallback(async () => {
     const { data } = await supabase.from('documents').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false });
     setDocs(data || []);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchDocs();
     supabase.from('profiles').select('id, name, avatar_url').then(({ data }) => setProfiles(data || []));
-  }, []);
+  }, [fetchDocs]);
+
+  useRealtimeSubscription('documents', fetchDocs);
 
   const getProfile = (id: string) => profiles.find(p => p.id === id);
 

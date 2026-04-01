@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { StatusBadge } from '@/components/Badges';
 import { Plus, X, Store } from 'lucide-react';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export default function Vendors() {
   const { user } = useAuthStore();
@@ -12,22 +14,18 @@ export default function Vendors() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
 
-  const fetchVendors = async () => {
+  const fetchVendors = useCallback(async () => {
     const { data } = await supabase.from('vendors').select('*').order('name');
     setVendors(data || []);
     setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchVendors();
-    const channel = supabase.channel('vendors-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vendors' }, fetchVendors)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => { fetchVendors(); }, [fetchVendors]);
+  useRealtimeSubscription('vendors', fetchVendors);
 
   const confirmStatus = async (vendorId: string, field: string) => {
     await supabase.from('vendors').update({ [field]: 'confirmed' }).eq('id', vendorId);
+    toast.success('Status confirmed!');
   };
 
   if (loading) return <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-28 bg-muted rounded-xl animate-pulse" />)}</div>;

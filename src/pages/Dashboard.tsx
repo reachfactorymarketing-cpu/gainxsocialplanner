@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
@@ -7,7 +7,7 @@ import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtil
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
 import { CalendarDays, CheckSquare, FileText, MessageCircle, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Dashboard() {
@@ -23,40 +23,36 @@ export default function Dashboard() {
   
 
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-        const [tasksRes, scheduleRes, docsRes, msgRes, profilesRes] = await Promise.all([
-          supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50),
-          supabase.from('schedule_slots').select('*').order('time', { ascending: true }),
-          supabase.from('documents').select('*').eq('pinned', true),
-          supabase.from('messages').select('*').eq('channel', '#all-hands').order('created_at', { ascending: false }).limit(3),
-          supabase.from('profiles').select('id, name, role, avatar_url'),
-        ]);
-        setTasks(tasksRes.data || []);
-        setSchedule(scheduleRes.data || []);
-        setPinnedDocs(docsRes.data || []);
-        setRecentMessages((msgRes.data || []).reverse());
-        const map: Record<string, any> = {};
-        profilesRes.data?.forEach(p => { map[p.id] = p; });
-        setProfiles(map);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+  const fetchAll = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [tasksRes, scheduleRes, docsRes, msgRes, profilesRes] = await Promise.all([
+        supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50),
+        supabase.from('schedule_slots').select('*').order('time', { ascending: true }),
+        supabase.from('documents').select('*').eq('pinned', true),
+        supabase.from('messages').select('*').eq('channel', '#all-hands').order('created_at', { ascending: false }).limit(3),
+        supabase.from('profiles').select('id, name, role, avatar_url'),
+      ]);
+      setTasks(tasksRes.data || []);
+      setSchedule(scheduleRes.data || []);
+      setPinnedDocs(docsRes.data || []);
+      setRecentMessages((msgRes.data || []).reverse());
+      const map: Record<string, any> = {};
+      profilesRes.data?.forEach(p => { map[p.id] = p; });
+      setProfiles(map);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    // Realtime messages
-    const channel = supabase.channel('dashboard-msgs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'channel=eq.#all-hands' }, (payload) => {
-        setRecentMessages(prev => [...prev, payload.new].slice(-3));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  useRealtimeSubscription('tasks', fetchAll);
+  useRealtimeSubscription('announcements', fetchAll);
+  useRealtimeSubscription('messages', fetchAll);
+  useRealtimeSubscription('documents', fetchAll);
 
   const myTasks = isAdmin ? tasks : isGuestRole ? tasks : tasks.filter(t => t.assignee_id === user?.id);
   // FIX 6: Filter out Done tasks, sort overdue first

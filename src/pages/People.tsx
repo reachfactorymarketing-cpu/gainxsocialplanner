@@ -6,6 +6,8 @@ import { RoleBadge, ZoneBadge } from '@/components/Badges';
 import { Search, UserPlus, X, Edit2, Users } from 'lucide-react';
 import { ZONES, ROLE_LABELS, type AppRole } from '@/lib/constants';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { usePresence } from '@/hooks/usePresence';
 
 const ROLES: AppRole[] = ['admin', 'zone_lead', 'volunteer', 'instructor', 'vendor', 'reset_space_partner'];
 
@@ -18,6 +20,7 @@ export default function People() {
   const [showAdd, setShowAdd] = useState(false);
   const [editPerson, setEditPerson] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const { onlineUsers, isOnline } = usePresence();
 
   const fetchData = async () => {
     const [pRes, tRes] = await Promise.all([
@@ -30,6 +33,8 @@ export default function People() {
   };
 
   useEffect(() => { fetchData(); }, []);
+  useRealtimeSubscription('profiles', fetchData);
+  useRealtimeSubscription('tasks', fetchData);
 
   const filtered = profiles.filter(p => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.email?.toLowerCase().includes(search.toLowerCase()));
 
@@ -47,7 +52,13 @@ export default function People() {
     <div className="space-y-4 max-w-4xl">
       <ContextualTooltip screen="people" />
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">People & Roles</h1>
+        <div>
+          <h1 className="text-xl font-bold">People & Roles</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+            {onlineUsers.length} online
+          </p>
+        </div>
         {isAdmin && (
           <button onClick={() => setShowAdd(true)} className="gradient-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
             <UserPlus size={16} /> Add Person
@@ -71,8 +82,9 @@ export default function People() {
             const stats = getTaskStats(p.id);
             return (
               <div key={p.id} className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold shrink-0" style={{ background: p.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold shrink-0" style={{ background: p.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
                   {p.avatar_url ? <img src={p.avatar_url} alt="" className="w-full h-full object-cover" /> : p.name?.[0]?.toUpperCase() || '?'}
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card ${isOnline(p.id) ? 'bg-green-500' : 'bg-gray-300'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">{p.name}</p>

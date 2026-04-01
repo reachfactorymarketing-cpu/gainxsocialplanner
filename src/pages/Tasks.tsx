@@ -9,6 +9,8 @@ import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { Plus, X, MessageSquare, Save, Trash2 } from 'lucide-react';
 import KanbanColumn from '@/components/tasks/KanbanColumn';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export default function Tasks() {
   const { user } = useAuthStore();
@@ -38,21 +40,24 @@ export default function Tasks() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchTasks();
-    const channel = supabase
-      .channel('tasks-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchTasks)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchTasks]);
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  useRealtimeSubscription('tasks', fetchTasks);
 
   const filtered = zoneFilter === 'All' ? tasks : tasks.filter(t => t.zone === zoneFilter);
 
   const moveTask = async (taskId: string, newStatus: TaskStatus) => {
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    // Optimistic update
+    const prevTasks = tasks;
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
     if (selectedTask?.id === taskId) setSelectedTask((prev: any) => prev ? { ...prev, status: newStatus } : null);
+    
+    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    if (error) {
+      setTasks(prevTasks);
+      toast.error('Failed to move task — please try again');
+    } else {
+      toast.success(`Task moved to ${newStatus}`);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
