@@ -43,6 +43,7 @@ export default function Reports() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      <ContextualTooltip screen="reports" />
       <h1 className="text-xl font-bold">Reports</h1>
 
       {/* Metric Cards */}

@@ -45,6 +45,8 @@ export default function Chat() {
   };
 
   return (
+    <div>
+      <ContextualTooltip screen="chat" />
     <div className="flex h-[calc(100vh-8rem)] gap-4 max-w-5xl">
       {/* Channels */}
       <div className="hidden md:block w-48 bg-card border border-border rounded-xl p-2 shrink-0">

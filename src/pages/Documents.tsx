@@ -56,6 +56,7 @@ function DocumentsTab() {
 
   return (
     <div className="space-y-4">
+      <ContextualTooltip screen="documents" />
       <div className="flex gap-2 flex-wrap items-center">
         <div className="relative flex-1 max-w-xs">
           <Search size={16} className="absolute left-3 top-2.5 text-muted-foreground" />
