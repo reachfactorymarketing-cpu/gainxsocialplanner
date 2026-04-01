@@ -112,14 +112,24 @@ export default function Tasks() {
     setShowCreate(true);
   };
 
+  // Vendor: no task board access
+  if (isVendor) return <div className="text-center py-16 text-muted-foreground">The Task Board is not available for Vendor accounts.</div>;
+
   if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-muted rounded-xl animate-pulse" />)}</div>;
+
+  const canDragDrop = canManageTasks && !isGuestRole;
 
   return (
     <div className="space-y-4">
       <ContextualTooltip screen="tasks" />
+      {isGuestRole && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 font-medium">
+          👀 Read Only — Sign in for full access
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Task Board</h1>
-        {canManageTasks && (
+        {canManageTasks && !isGuestRole && (
           <button onClick={() => { setCreateStatus('To Do'); setShowCreate(true); }} className="gradient-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
             <Plus size={16} /> New Task
           </button>
