@@ -1,9 +1,18 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
-import { DEMO_CREDENTIALS } from '@/lib/constants';
 import logo from '@/assets/GainX_logo.png';
+
+const PREVIEW_MAP: Record<string, { email: string; password: string }> = {
+  demo: { email: 'demo@gainxsocial.com', password: 'Demo-GainXS26' },
+  admin: { email: 'admin@gainsocial.com', password: 'GainSocial2026' },
+  lead: { email: 'jasmine@gainsocial.com', password: 'password' },
+  volunteer: { email: 'tanya@gainsocial.com', password: 'password' },
+  vendor: { email: 'vendor@gainsocial.com', password: 'password' },
+  instructor: { email: 'marcus@gainsocial.com', password: 'password' },
+  reset: { email: 'reset@gainsocial.com', password: 'password' },
+};
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +20,28 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setGuest } = useAuthStore();
+
+  // Auto-login for role preview (from Admin dashboard)
+  useEffect(() => {
+    const preview = searchParams.get('preview');
+    if (preview && PREVIEW_MAP[preview]) {
+      const cred = PREVIEW_MAP[preview];
+      setEmail(cred.email);
+      setPassword(cred.password);
+      setLoading(true);
+      supabase.auth.signInWithPassword({ email: cred.email, password: cred.password })
+        .then(({ error: err }) => {
+          if (err) {
+            setError(err.message);
+            setLoading(false);
+          } else {
+            navigate('/');
+          }
+        });
+    }
+  }, [searchParams, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,14 +62,9 @@ const Login = () => {
     navigate('/');
   };
 
-  const fillDemo = (cred: typeof DEMO_CREDENTIALS[0]) => {
-    setEmail(cred.email);
-    setPassword(cred.password);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
-      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6 max-h-[95vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6">
         <div className="flex flex-col items-center space-y-3">
           <img src={logo} alt="Gain X Social" className="w-20 h-20" />
           <h1 className="text-2xl font-bold gradient-text">Gain X Social Planner</h1>
@@ -62,7 +87,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="you@gainsocial.com"
+              placeholder="you@example.com"
               required
             />
           </div>
@@ -90,36 +115,19 @@ const Login = () => {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-          <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">Explore by role</span></div>
+          <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or</span></div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          {DEMO_CREDENTIALS.map((cred) => (
-            <button
-              key={cred.email}
-              onClick={() => fillDemo(cred)}
-              className="text-left bg-white border border-gray-200 rounded-xl p-3 hover:border-purple-300 hover:shadow-sm transition-all"
-            >
-              <span className={`inline-block text-[10px] font-semibold text-white px-2 py-0.5 rounded-full mb-1.5 ${cred.color}`}>
-                {cred.role}
-              </span>
-              <p className="text-xs font-medium text-foreground">{cred.label}</p>
-              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{cred.description}</p>
-            </button>
-          ))}
+        <button
+          onClick={handleGuestAccess}
+          className="w-full border border-border rounded-lg py-2.5 text-sm font-medium hover:bg-accent transition"
+        >
+          Continue as Guest (Read-Only)
+        </button>
 
-          {/* Guest card */}
-          <button
-            onClick={handleGuestAccess}
-            className="text-left bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 hover:border-purple-300 hover:shadow-sm transition-all"
-          >
-            <span className="inline-block text-[10px] font-semibold text-white px-2 py-0.5 rounded-full mb-1.5 bg-gainx-gray">
-              Guest
-            </span>
-            <p className="text-xs font-medium text-foreground">Guest View</p>
-            <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Read-only event overview</p>
-          </button>
-        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          First time? Contact your event organizer for access.
+        </p>
       </div>
     </div>
   );

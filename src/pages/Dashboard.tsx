@@ -5,7 +5,7 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge, ZoneBadge } from '@/components/Badges';
 import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
-import { CalendarDays, CheckSquare, FileText, MessageCircle, ArrowRight } from 'lucide-react';
+import { CalendarDays, CheckSquare, FileText, MessageCircle, ArrowRight, Eye, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { formatDistanceToNow } from 'date-fns';
