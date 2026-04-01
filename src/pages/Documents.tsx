@@ -249,10 +249,12 @@ function DocumentsTab() {
   };
 
   const fetchDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false });
+    let query = supabase.from('documents').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false });
+    if (!canManageDocuments) query = query.eq('permissions_level', 'all');
+    const { data } = await query;
     setDocs(data || []);
     setLoading(false);
-  }, []);
+  }, [canManageDocuments]);
 
   useEffect(() => {
     fetchDocs();

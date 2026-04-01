@@ -15,10 +15,12 @@ export default function Vendors() {
   const [showAdd, setShowAdd] = useState(false);
 
   const fetchVendors = useCallback(async () => {
-    const { data } = await supabase.from('vendors').select('*').order('name');
+    let query = supabase.from('vendors').select('*').order('name');
+    if (isVendor && user?.id) query = query.eq('user_id', user.id);
+    const { data } = await query;
     setVendors(data || []);
     setLoading(false);
-  }, []);
+  }, [isVendor, user?.id]);
 
   useEffect(() => { fetchVendors(); }, [fetchVendors]);
   useRealtimeSubscription('vendors', fetchVendors);
