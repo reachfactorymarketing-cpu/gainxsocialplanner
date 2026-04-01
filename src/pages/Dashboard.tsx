@@ -22,11 +22,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   
 
-  useEffect(() => {
-    if (user && !user.has_seen_welcome && !isGuest) {
-      setShowWelcome(true);
-    }
-  }, [user, isGuest]);
 
   useEffect(() => {
     const fetchAll = async () => {
