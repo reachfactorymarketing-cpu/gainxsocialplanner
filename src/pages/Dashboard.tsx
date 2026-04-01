@@ -82,7 +82,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
+      
 
       {/* Hero */}
       <div className="rounded-2xl p-6 text-white" style={{background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #F97316 100%)'}}>
