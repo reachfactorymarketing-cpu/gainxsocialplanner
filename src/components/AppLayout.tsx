@@ -125,10 +125,27 @@ export default function AppLayout() {
         )}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 lg:pb-6">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-30">
+        {filteredNav.slice(0, 5).map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center py-2 text-xs font-semibold transition ${isActive ? "text-purple-600" : "text-gray-500"}`
+            }
+          >
+            <item.icon size={20} />
+            <span className="mt-0.5">{item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 }

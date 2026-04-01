@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 263 70% 58%;
+    --primary: 262 83% 57%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -35,12 +35,12 @@
     --radius: 0.75rem;
 
     /* GainX Brand Colors */
-    --gainx-purple: 263 70% 58%;
-    --gainx-orange: 24 95% 53%;
-    --gainx-teal: 173 85% 31%;
-    --gainx-amber: 32 95% 44%;
+    --gainx-purple: 262 83% 57%;
+    --gainx-orange: 25 95% 53%;
+    --gainx-teal: 174 72% 31%;
+    --gainx-amber: 38 92% 44%;
     --gainx-gray: 220 9% 46%;
-    --gainx-emerald: 160 84% 39%;
+    --gainx-emerald: 152 69% 31%;
     --gainx-blue: 217 91% 60%;
 
     /* Zone Colors */
@@ -76,10 +76,10 @@
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--gainx-purple)), hsl(var(--gainx-orange)));
+    background: linear-gradient(135deg, #7C3AED, #F97316);
   }
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--gainx-purple)), hsl(var(--gainx-orange)));
+    background: linear-gradient(135deg, #7C3AED, #F97316);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

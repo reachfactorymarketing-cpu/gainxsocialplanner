@@ -124,10 +124,10 @@ function TaskCard({ task, onClick, onMove, canManage }: { task: any; onClick: ()
     <div
       onClick={onClick}
       className={`bg-card rounded-lg p-3 border cursor-pointer hover:shadow-md transition ${
-        done ? 'border-gainx-emerald/30' :
-        isOverdue(task.due_date) ? 'border-l-4 border-l-destructive border-border' :
-        isDueToday(task.due_date) ? 'border-l-4 border-l-gainx-amber border-border' :
-        'border-border'
+        done ? 'border-l-4 border-l-green-400 border-border' :
+        isOverdue(task.due_date) ? 'border-l-4 border-l-red-400 border-border' :
+        isDueToday(task.due_date) ? 'border-l-4 border-l-amber-400 border-border' :
+        'border-l-4 border-l-transparent border-border'
       }`}
     >
       <p className={`text-sm font-medium ${done ? 'line-through text-muted-foreground' : ''}`}>{task.title}</p>
