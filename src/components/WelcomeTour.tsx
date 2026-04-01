@@ -123,7 +123,7 @@ export default function WelcomeTour({ onClose, onNavigate }: WelcomeTourProps) {
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
         {/* Content */}
         <div className="p-8 text-center">
-          <div className="text-5xl mb-4">{current.emoji}</div>
+          <div className="text-5xl text-center mb-4" style={{ fontFamily: 'inherit', lineHeight: 1 }}>{current.emoji}</div>
           <p className="text-xs text-gray-400 mb-2">Step {step + 1} of {totalSteps}</p>
           <h2 className="text-xl font-black text-gray-900 mb-3">{current.title}</h2>
           <p className="text-sm text-gray-600 leading-relaxed">{current.body}</p>
