@@ -5,7 +5,7 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge, ZoneBadge } from '@/components/Badges';
 import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
-import { CalendarDays, CheckSquare, AlertTriangle, FileText, Clock } from 'lucide-react';
+import { CheckSquare, FileText } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, isGuest } = useAuthStore();
