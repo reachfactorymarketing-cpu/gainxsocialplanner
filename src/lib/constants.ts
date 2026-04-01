@@ -53,11 +53,4 @@ export const CHANNELS = ['#all-hands', '#move-floor', '#reset-space', '#link-up'
 
 export const TASK_COLUMNS: TaskStatus[] = ['To Do', 'In Progress', 'Needs Review', 'Done'];
 
-export const DEMO_CREDENTIALS = [
-  { email: 'admin@gainsocial.com', password: 'GainSocial2026', role: 'Admin' as const, label: 'Admin View', description: 'Tasks, people, reports, all zones', color: 'bg-gainx-purple' },
-  { email: 'jasmine@gainsocial.com', password: 'password', role: 'Zone Lead' as const, label: 'Zone Lead View', description: 'Zone tasks, chat, brainstorm', color: 'bg-gainx-teal' },
-  { email: 'tanya@gainsocial.com', password: 'password', role: 'Volunteer' as const, label: 'Volunteer View', description: 'My tasks, schedule, zone chat', color: 'bg-gainx-blue' },
-  { email: 'vendor@gainsocial.com', password: 'password', role: 'Vendor' as const, label: 'Vendor View', description: 'Booth details, commitments', color: 'bg-gainx-orange' },
-  { email: 'marcus@gainsocial.com', password: 'password', role: 'Instructor' as const, label: 'Instructor View', description: 'Class schedule, zone tasks', color: 'bg-gainx-amber' },
-  { email: 'reset@gainsocial.com', password: 'password', role: 'Reset Space' as const, label: 'Reset Space View', description: 'Reset Space zone tasks', color: 'bg-gainx-emerald' },
-];
+// Old DEMO_CREDENTIALS removed — auth is Supabase-only
