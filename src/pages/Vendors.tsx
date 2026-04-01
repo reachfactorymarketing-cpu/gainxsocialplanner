@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { StatusBadge } from '@/components/Badges';
 import { Plus, X, Store } from 'lucide-react';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export default function Vendors() {
   const { user } = useAuthStore();
