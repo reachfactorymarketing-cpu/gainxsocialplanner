@@ -6,12 +6,12 @@ import logo from '@/assets/GainX_logo.png';
 
 const PREVIEW_MAP: Record<string, { email: string; password: string }> = {
   demo: { email: 'demo@gainxsocial.com', password: 'Demo-GainXS26' },
-  admin: { email: 'admin@gainsocial.com', password: 'GainSocial2026' },
-  lead: { email: 'jasmine@gainsocial.com', password: 'password' },
-  volunteer: { email: 'tanya@gainsocial.com', password: 'password' },
-  vendor: { email: 'vendor@gainsocial.com', password: 'password' },
-  instructor: { email: 'marcus@gainsocial.com', password: 'password' },
-  reset: { email: 'reset@gainsocial.com', password: 'password' },
+  admin: { email: 'admin@gainxsocial.com', password: 'Demo-GainXS26' },
+  lead: { email: 'lead@gainxsocial.com', password: 'Demo-GainXS26' },
+  volunteer: { email: 'volunteer@gainxsocial.com', password: 'Demo-GainXS26' },
+  vendor: { email: 'vendor@gainxsocial.com', password: 'Demo-GainXS26' },
+  instructor: { email: 'instructor@gainxsocial.com', password: 'Demo-GainXS26' },
+  reset: { email: 'reset@gainxsocial.com', password: 'Demo-GainXS26' },
 };
 
 const Login = () => {
