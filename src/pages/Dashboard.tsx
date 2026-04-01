@@ -184,6 +184,8 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      )}
+      <div className="grid md:grid-cols-2 gap-6">
 
         {/* Schedule */}
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
