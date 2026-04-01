@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 export default function Tasks() {
   const { user } = useAuthStore();
-  const { canManageTasks, isGuestRole } = useRole();
+  const { role, canManageTasks, isGuestRole, isAdmin, isVendor } = useRole();
   const [tasks, setTasks] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [zoneFilter, setZoneFilter] = useState<string>('All');
@@ -29,8 +29,16 @@ export default function Tasks() {
   );
 
   const fetchTasks = useCallback(async () => {
+    let query = supabase.from('tasks').select('*').order('created_at', { ascending: false });
+    // Role-based filtering
+    if (role === 'zone_lead' && user?.zone) {
+      query = query.eq('zone', user.zone);
+    } else if (role === 'volunteer' || role === 'instructor' || role === 'reset_space_partner') {
+      if (user?.id) query = query.eq('assignee_id', user.id);
+    }
+    // admin and guest see all
     const [{ data }, { data: profs }] = await Promise.all([
-      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+      query,
       supabase.from('profiles').select('id, name, role, avatar_url'),
     ]);
     setTasks(data || []);
@@ -38,7 +46,7 @@ export default function Tasks() {
     profs?.forEach(p => { map[p.id] = p; });
     setProfiles(map);
     setLoading(false);
-  }, []);
+  }, [role, user?.zone, user?.id]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
   useRealtimeSubscription('tasks', fetchTasks);
