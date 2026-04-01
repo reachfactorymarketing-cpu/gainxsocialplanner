@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { RoleBadge, ZoneBadge } from '@/components/Badges';
-import { Search, UserPlus, X, Edit2 } from 'lucide-react';
+import { Search, UserPlus, X, Edit2, Users } from 'lucide-react';
 import { ZONES, ROLE_LABELS, type AppRole } from '@/lib/constants';
 
 const ROLES: AppRole[] = ['admin', 'zone_lead', 'volunteer', 'instructor', 'vendor', 'reset_space_partner'];
