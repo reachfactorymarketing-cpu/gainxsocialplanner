@@ -82,8 +82,9 @@ export default function People() {
             const stats = getTaskStats(p.id);
             return (
               <div key={p.id} className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold shrink-0" style={{ background: p.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold shrink-0" style={{ background: p.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
                   {p.avatar_url ? <img src={p.avatar_url} alt="" className="w-full h-full object-cover" /> : p.name?.[0]?.toUpperCase() || '?'}
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card ${isOnline(p.id) ? 'bg-green-500' : 'bg-gray-300'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm">{p.name}</p>
