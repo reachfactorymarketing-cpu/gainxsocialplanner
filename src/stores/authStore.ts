@@ -40,11 +40,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const fetchProfile = async (userId: string) => {
       try {
-        const { data: profile } = await supabase
+        let { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .single();
+
+        // Auto-create profile if missing (e.g. trigger didn't fire)
+        if (!profile) {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const newProfile = {
+              id: authUser.id,
+              name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+              email: authUser.email || '',
+              role: 'volunteer' as const,
+              zone: 'General',
+              status: 'active',
+              has_seen_welcome: false,
+            };
+            await supabase.from('profiles').upsert(newProfile);
+            profile = newProfile as any;
+          }
+        }
+
         if (profile) {
           set({ user: profile as unknown as Profile, isGuest: false, isLoading: false });
         } else {
