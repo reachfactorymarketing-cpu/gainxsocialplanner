@@ -248,7 +248,7 @@ export default function AppLayout() {
       {/* Help Center FAB */}
       <button
         onClick={() => setShowHelp(true)}
-        className="fixed bottom-6 right-6 w-12 h-12 rounded-full text-white shadow-lg z-40 flex items-center justify-center hover:opacity-90 transition lg:bottom-6"
+        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 w-12 h-12 rounded-full text-white shadow-lg z-40 flex items-center justify-center hover:opacity-90 transition"
         style={{ background: 'linear-gradient(135deg, #7C3AED, #F97316)' }}
         title="Help Center"
       >
