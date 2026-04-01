@@ -40,14 +40,8 @@ export default function Tasks() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchTasks();
-    const channel = supabase
-      .channel('tasks-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchTasks)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchTasks]);
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  useRealtimeSubscription('tasks', fetchTasks);
 
   const filtered = zoneFilter === 'All' ? tasks : tasks.filter(t => t.zone === zoneFilter);
 
