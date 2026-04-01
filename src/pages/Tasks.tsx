@@ -46,9 +46,18 @@ export default function Tasks() {
   const filtered = zoneFilter === 'All' ? tasks : tasks.filter(t => t.zone === zoneFilter);
 
   const moveTask = async (taskId: string, newStatus: TaskStatus) => {
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    // Optimistic update
+    const prevTasks = tasks;
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
     if (selectedTask?.id === taskId) setSelectedTask((prev: any) => prev ? { ...prev, status: newStatus } : null);
+    
+    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    if (error) {
+      setTasks(prevTasks);
+      toast.error('Failed to move task — please try again');
+    } else {
+      toast.success(`Task moved to ${newStatus}`);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
