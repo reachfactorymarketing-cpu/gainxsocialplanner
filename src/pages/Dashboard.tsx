@@ -49,28 +49,50 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Hero */}
-      <div className="gradient-primary rounded-2xl p-6 text-primary-foreground">
-        <h1 className="text-2xl font-bold">{EVENT_NAME}</h1>
-        <p className="text-sm opacity-90 mt-1">{EVENT_VENUE} · {EVENT_TIME}</p>
-        <div className="flex items-center gap-3 mt-3">
-          {!isGuestRole && (
-            <>
-              <span className="text-sm">Welcome, {user?.name || 'Team Member'}</span>
+      <div className="rounded-2xl p-6 text-white" style={{background: "linear-gradient(135deg, #7C3AED, #F97316)"}}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-lg">
+            {(user?.name || "G")[0].toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-xl font-black">
+              Hey, {isGuestRole ? "Guest" : user?.name?.split(" ")[0]}! 👋
+            </h1>
+            <div className="flex items-center gap-2 mt-0.5">
               <RoleBadge role={role} />
               {user?.zone && <ZoneBadge zone={user.zone} />}
-            </>
-          )}
-          {isGuestRole && <span className="text-sm">Guest Access · Read Only</span>}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-4">
+          <div className="bg-white/20 rounded-xl px-3 py-2 text-center">
+            <div className="font-black text-xl">{days}</div>
+            <div className="text-xs opacity-90">Days to Event</div>
+          </div>
+          <div className="bg-white/20 rounded-xl px-3 py-2 text-center">
+            <div className="font-black text-xl">{openTasks.length}</div>
+            <div className="text-xs opacity-90">Open Tasks</div>
+          </div>
+          <div className="bg-white/20 rounded-xl px-3 py-2 text-center">
+            <div className="font-black text-xl">{overdueTasks.length}</div>
+            <div className="text-xs opacity-90">Overdue</div>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<CalendarDays size={20} />} label="Days to Event" value={days.toString()} color="text-primary" />
-        <StatCard icon={<CheckSquare size={20} />} label="Open Tasks" value={openTasks.length.toString()} color="text-gainx-blue" />
-        <StatCard icon={<AlertTriangle size={20} />} label="Overdue" value={overdueTasks.length.toString()} color="text-destructive" />
-        <StatCard icon={<Clock size={20} />} label="Total Tasks" value={tasks.length.toString()} color="text-gainx-teal" />
-      </div>
+      {/* Admin Getting Started */}
+      {isAdmin && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 className="font-bold text-amber-800 mb-2">
+            🚀 Getting Started
+          </h3>
+          <div className="text-sm text-amber-700 space-y-1">
+            <p>1. <strong>Add team members</strong> → People & Roles → Add Person</p>
+            <p>2. <strong>Assign tasks</strong> → Task Board → click any card</p>
+            <p>3. <strong>Send an announcement</strong> → Announcements → New</p>
+          </div>
+        </div>
+      )}
 
       {/* Guest Banner */}
       {isGuestRole && (
