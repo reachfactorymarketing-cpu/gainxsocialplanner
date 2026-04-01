@@ -12,25 +12,30 @@ import ProfileSettingsModal from '@/components/ProfileSettingsModal';
 import WelcomeTour from '@/components/WelcomeTour';
 import HelpCenter from '@/components/HelpCenter';
 
-const navItems = [
-  { to: '/', icon: Home, label: 'Dashboard', roles: 'all' },
-  { to: '/tasks', icon: CheckSquare, label: 'Tasks', roles: 'all' },
-  { to: '/schedule', icon: Calendar, label: 'Schedule', roles: 'all' },
-  { to: '/documents', icon: FileText, label: 'Documents', roles: 'all' },
-  { to: '/chat', icon: MessageCircle, label: 'Chat', roles: 'authenticated' },
-  { to: '/people', icon: Users, label: 'People', roles: 'admin' },
-  { to: '/reports', icon: BarChart3, label: 'Reports', roles: 'admin' },
-  { to: '/vendors', icon: Store, label: 'Vendors', roles: 'admin,vendor' },
-  { to: '/announcements', icon: Megaphone, label: 'Announcements', roles: 'admin' },
+const NAV_ITEMS = [
+  { to: '/', icon: Home, label: 'Dashboard', access: ['admin','zone_lead','volunteer','instructor','vendor','reset_space_partner','guest'] },
+  { to: '/tasks', icon: CheckSquare, label: 'Tasks', access: ['admin','zone_lead','volunteer','instructor','reset_space_partner','guest'] },
+  { to: '/schedule', icon: Calendar, label: 'Schedule', access: ['admin','zone_lead','volunteer','instructor','vendor','reset_space_partner','guest'] },
+  { to: '/documents', icon: FileText, label: 'Documents', access: ['admin','zone_lead','volunteer','instructor','vendor','reset_space_partner','guest'] },
+  { to: '/chat', icon: MessageCircle, label: 'Chat', access: ['admin','zone_lead','volunteer','instructor','vendor','reset_space_partner'] },
+  { to: '/people', icon: Users, label: 'People', access: ['admin'] },
+  { to: '/reports', icon: BarChart3, label: 'Reports', access: ['admin'] },
+  { to: '/vendors', icon: Store, label: 'Vendors', access: ['admin','vendor'] },
+  { to: '/announcements', icon: Megaphone, label: 'Announcements', access: ['admin'] },
 ];
 
-const mobileBottomItems = [
-  { to: '/', icon: Home, label: 'Home' },
-  { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
-  { to: '/schedule', icon: Calendar, label: 'Schedule' },
-  { to: '/documents', icon: FileText, label: 'Docs' },
-  { to: '/chat', icon: MessageCircle, label: 'Chat' },
-];
+const getMobileItems = (role: string) => {
+  const items = [
+    { to: '/', icon: Home, label: 'Home' },
+    { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
+    { to: '/schedule', icon: Calendar, label: 'Schedule' },
+    { to: '/documents', icon: FileText, label: 'Docs' },
+    { to: '/chat', icon: MessageCircle, label: 'Chat' },
+  ];
+  if (role === 'guest') return items.filter(i => i.to !== '/chat');
+  if (role === 'vendor') return items.filter(i => i.to !== '/tasks');
+  return items;
+};
 
 export default function AppLayout() {
   const { user, isGuest, signOut, setGuest, setUser } = useAuthStore();
