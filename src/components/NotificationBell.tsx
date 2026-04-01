@@ -23,32 +23,41 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
+  const fetchNotifications = useCallback(async () => {
+    if (!user || isGuest) return;
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    
+    if (data) {
+      const prevCount = count;
+      const newCount = data.filter((n) => !n.read).length;
+      setNotifications(data);
+      setCount(newCount);
+      
+      // Toast for new notifications
+      if (newCount > prevCount && prevCount > 0) {
+        const newest = data[0];
+        if (newest && !newest.read) {
+          toast(newest.title, { description: newest.body || undefined, duration: 4000 });
+        }
+      }
+    }
+  }, [user, isGuest]);
+
   useEffect(() => {
     if (!user || isGuest) return;
-    
-    const fetchNotifications = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      
-      if (data) {
-        setNotifications(data);
-        setCount(data.filter((n) => !n.read).length);
-      }
-    };
-
     fetchNotifications();
+  }, [user, isGuest, fetchNotifications]);
 
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, fetchNotifications)
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user, isGuest]);
+  useRealtimeSubscription(
+    'notifications',
+    fetchNotifications,
+    user ? `user_id=eq.${user.id}` : undefined
+  );
 
   const markAllRead = async () => {
     if (!user) return;

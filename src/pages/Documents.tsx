@@ -248,16 +248,18 @@ function DocumentsTab() {
     setTipDismissed(true);
   };
 
-  const fetchDocs = async () => {
+  const fetchDocs = useCallback(async () => {
     const { data } = await supabase.from('documents').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false });
     setDocs(data || []);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchDocs();
     supabase.from('profiles').select('id, name, avatar_url').then(({ data }) => setProfiles(data || []));
-  }, []);
+  }, [fetchDocs]);
+
+  useRealtimeSubscription('documents', fetchDocs);
 
   const getProfile = (id: string) => profiles.find(p => p.id === id);
 

@@ -27,18 +27,14 @@ export default function Schedule() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from('schedule_slots').select('*').order('time');
-      setSlots(data || []);
-      setLoading(false);
-    };
-    fetch();
-    const channel = supabase.channel('schedule-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_slots' }, fetch)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+  const fetchSchedule = useCallback(async () => {
+    const { data } = await supabase.from('schedule_slots').select('*').order('time');
+    setSlots(data || []);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { fetchSchedule(); }, [fetchSchedule]);
+  useRealtimeSubscription('schedule_slots', fetchSchedule);
 
   if (loading) return <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />)}</div>;
 
