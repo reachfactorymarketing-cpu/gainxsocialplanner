@@ -20,6 +20,7 @@ export default function People() {
   const [showAdd, setShowAdd] = useState(false);
   const [editPerson, setEditPerson] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const { onlineUsers, isOnline } = usePresence();
 
   const fetchData = async () => {
     const [pRes, tRes] = await Promise.all([
@@ -32,6 +33,8 @@ export default function People() {
   };
 
   useEffect(() => { fetchData(); }, []);
+  useRealtimeSubscription('profiles', fetchData);
+  useRealtimeSubscription('tasks', fetchData);
 
   const filtered = profiles.filter(p => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.email?.toLowerCase().includes(search.toLowerCase()));
 
