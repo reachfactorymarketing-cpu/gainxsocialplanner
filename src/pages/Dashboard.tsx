@@ -26,17 +26,36 @@ export default function Dashboard() {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
+      // Build task query based on role
+      let taskQuery = supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50);
+      if (role === 'zone_lead' && user?.zone) taskQuery = taskQuery.eq('zone', user.zone);
+      else if (role === 'volunteer' || role === 'instructor' || role === 'reset_space_partner') {
+        if (user?.id) taskQuery = taskQuery.eq('assignee_id', user.id);
+      }
+      else if (role === 'vendor') taskQuery = taskQuery.limit(0); // vendors don't see tasks
+
+      // Build schedule query based on role
+      let scheduleQuery = supabase.from('schedule_slots').select('*').order('time', { ascending: true });
+      if (isGuestRole) scheduleQuery = scheduleQuery.eq('phase', 'event');
+
+      // Build docs query
+      let docsQuery = supabase.from('documents').select('*').eq('pinned', true);
+      if (!isAdmin) docsQuery = docsQuery.eq('permissions_level', 'all');
+
+      // Build messages query - use role-appropriate channel
+      const msgChannel = role === 'vendor' ? '#vendor-row' : '#all-hands';
+
       const [tasksRes, scheduleRes, docsRes, msgRes, profilesRes] = await Promise.all([
-        supabase.from('tasks').select('*').order('due_date', { ascending: true }).limit(50),
-        supabase.from('schedule_slots').select('*').order('time', { ascending: true }),
-        supabase.from('documents').select('*').eq('pinned', true),
-        supabase.from('messages').select('*').eq('channel', '#all-hands').order('created_at', { ascending: false }).limit(3),
+        taskQuery,
+        scheduleQuery,
+        docsQuery,
+        isGuestRole ? Promise.resolve({ data: [] }) : supabase.from('messages').select('*').eq('channel', msgChannel).order('created_at', { ascending: false }).limit(3),
         supabase.from('profiles').select('id, name, role, avatar_url'),
       ]);
       setTasks(tasksRes.data || []);
       setSchedule(scheduleRes.data || []);
       setPinnedDocs(docsRes.data || []);
-      setRecentMessages((msgRes.data || []).reverse());
+      setRecentMessages(((msgRes as any).data || []).reverse());
       const map: Record<string, any> = {};
       profilesRes.data?.forEach(p => { map[p.id] = p; });
       setProfiles(map);
@@ -45,7 +64,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [role, user?.zone, user?.id, isAdmin, isGuestRole]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -54,7 +73,7 @@ export default function Dashboard() {
   useRealtimeSubscription('messages', fetchAll);
   useRealtimeSubscription('documents', fetchAll);
 
-  const myTasks = isAdmin ? tasks : isGuestRole ? tasks : tasks.filter(t => t.assignee_id === user?.id);
+  const myTasks = tasks; // already filtered by role in fetchAll
   // FIX 6: Filter out Done tasks, sort overdue first
   const openTasks = myTasks
     .filter(t => t.status !== 'Done')
@@ -130,10 +149,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* My Tasks - FIX 6: no Done tasks, max 6, sorted */}
+      {/* My Tasks - hide for vendors */}
+      {role !== 'vendor' && (
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-          <h2 className="font-semibold mb-3 flex items-center gap-2"><CheckSquare size={18} /> My Tasks</h2>
+          <h2 className="font-semibold mb-3 flex items-center gap-2"><CheckSquare size={18} /> {isAdmin ? 'All Tasks' : 'My Tasks'}</h2>
           {openTasks.length === 0 ? (
             <div className="text-center py-6">
               <CheckSquare className="mx-auto mb-2 text-muted-foreground" size={32} />
@@ -165,6 +184,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      )}
 
         {/* Schedule */}
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
@@ -191,9 +211,9 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* FIX 3: Recent Messages Card */}
+      {/* Recent Messages - hide for guests */}
+      {!isGuestRole && (
       <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
         <h2 className="font-semibold mb-3 flex items-center gap-2"><MessageCircle size={18} /> Recent Messages</h2>
         {recentMessages.length === 0 ? (
@@ -232,6 +252,7 @@ export default function Dashboard() {
           </>
         )}
       </div>
+      )}
 
       {pinnedDocs.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">

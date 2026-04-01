@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuthStore } from '@/stores/authStore';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge } from '@/components/Badges';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { Plus, X, Calendar } from 'lucide-react';
-import { ZONES } from '@/lib/constants';
+import { ZONES, ROLE_LABELS } from '@/lib/constants';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const PHASES = ['setup', 'event', 'breakdown'] as const;
@@ -22,16 +23,28 @@ function parseTime(t: string): number {
 }
 
 export default function Schedule() {
-  const { canManageSchedule } = useRole();
+  const { user } = useAuthStore();
+  const { role, canManageSchedule, isGuestRole } = useRole();
   const [slots, setSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
 
+  const roleLabel = ROLE_LABELS[role] || role;
+
   const fetchSchedule = useCallback(async () => {
-    const { data } = await supabase.from('schedule_slots').select('*').order('time');
-    setSlots(data || []);
+    let query = supabase.from('schedule_slots').select('*').order('time');
+    if (isGuestRole) query = query.eq('phase', 'event');
+    const { data } = await query;
+    let filtered = data || [];
+    // Non-admin, non-guest: filter by role or zone
+    if (!isGuestRole && role !== 'admin') {
+      filtered = filtered.filter(s =>
+        s.roles?.includes(roleLabel) || s.zone === user?.zone
+      );
+    }
+    setSlots(filtered);
     setLoading(false);
-  }, []);
+  }, [role, user?.zone, isGuestRole, roleLabel]);
 
   useEffect(() => { fetchSchedule(); }, [fetchSchedule]);
   useRealtimeSubscription('schedule_slots', fetchSchedule);

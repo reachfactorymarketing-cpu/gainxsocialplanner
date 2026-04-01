@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 export default function Tasks() {
   const { user } = useAuthStore();
-  const { canManageTasks, isGuestRole } = useRole();
+  const { role, canManageTasks, isGuestRole, isAdmin, isVendor } = useRole();
   const [tasks, setTasks] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [zoneFilter, setZoneFilter] = useState<string>('All');
@@ -29,8 +29,16 @@ export default function Tasks() {
   );
 
   const fetchTasks = useCallback(async () => {
+    let query = supabase.from('tasks').select('*').order('created_at', { ascending: false });
+    // Role-based filtering
+    if (role === 'zone_lead' && user?.zone) {
+      query = query.eq('zone', user.zone);
+    } else if (role === 'volunteer' || role === 'instructor' || role === 'reset_space_partner') {
+      if (user?.id) query = query.eq('assignee_id', user.id);
+    }
+    // admin and guest see all
     const [{ data }, { data: profs }] = await Promise.all([
-      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+      query,
       supabase.from('profiles').select('id, name, role, avatar_url'),
     ]);
     setTasks(data || []);
@@ -38,7 +46,7 @@ export default function Tasks() {
     profs?.forEach(p => { map[p.id] = p; });
     setProfiles(map);
     setLoading(false);
-  }, []);
+  }, [role, user?.zone, user?.id]);
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
   useRealtimeSubscription('tasks', fetchTasks);
@@ -104,14 +112,24 @@ export default function Tasks() {
     setShowCreate(true);
   };
 
+  // Vendor: no task board access
+  if (isVendor) return <div className="text-center py-16 text-muted-foreground">The Task Board is not available for Vendor accounts.</div>;
+
   if (loading) return <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-muted rounded-xl animate-pulse" />)}</div>;
+
+  const canDragDrop = canManageTasks && !isGuestRole;
 
   return (
     <div className="space-y-4">
       <ContextualTooltip screen="tasks" />
+      {isGuestRole && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 font-medium">
+          👀 Read Only — Sign in for full access
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Task Board</h1>
-        {canManageTasks && (
+        {canManageTasks && !isGuestRole && (
           <button onClick={() => { setCreateStatus('To Do'); setShowCreate(true); }} className="gradient-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
             <Plus size={16} /> New Task
           </button>
@@ -132,39 +150,31 @@ export default function Tasks() {
         ))}
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
+      {canDragDrop ? (
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {TASK_COLUMNS.map((col) => (
+              <KanbanColumn key={col} status={col} tasks={filtered.filter(t => t.status === col)} onTaskClick={setSelectedTask}
+                canManage={true} onAddTask={handleAddTask} profiles={profiles} />
+            ))}
+          </div>
+          <DragOverlay>
+            {activeTask && (
+              <div className="bg-card rounded-lg p-3 border shadow-lg opacity-90 w-64">
+                <p className="text-sm font-medium">{activeTask.title}</p>
+                <div className="flex items-center gap-1.5 mt-2"><ZoneBadge zone={activeTask.zone} /><PriorityBadge priority={activeTask.priority} /></div>
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {TASK_COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col}
-              status={col}
-              tasks={filtered.filter(t => t.status === col)}
-              onTaskClick={setSelectedTask}
-              canManage={canManageTasks && !isGuestRole}
-              onAddTask={canManageTasks ? handleAddTask : undefined}
-              profiles={profiles}
-            />
+            <KanbanColumn key={col} status={col} tasks={filtered.filter(t => t.status === col)} onTaskClick={setSelectedTask}
+              canManage={false} profiles={profiles} />
           ))}
         </div>
-
-        <DragOverlay>
-          {activeTask && (
-            <div className="bg-card rounded-lg p-3 border shadow-lg opacity-90 w-64">
-              <p className="text-sm font-medium">{activeTask.title}</p>
-              <div className="flex items-center gap-1.5 mt-2">
-                <ZoneBadge zone={activeTask.zone} />
-                <PriorityBadge priority={activeTask.priority} />
-              </div>
-            </div>
-          )}
-        </DragOverlay>
-      </DndContext>
+      )}
 
       {selectedTask && (
         <TaskDrawer task={selectedTask} onClose={() => setSelectedTask(null)} onMove={moveTask} canManage={canManageTasks && !isGuestRole} profiles={profiles} onRefresh={fetchTasks} />
