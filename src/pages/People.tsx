@@ -45,6 +45,7 @@ export default function People() {
 
   return (
     <div className="space-y-4 max-w-4xl">
+      <ContextualTooltip screen="people" />
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">People & Roles</h1>
         {isAdmin && (
