@@ -4,8 +4,10 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge } from '@/components/Badges';
 import { NotificationBell } from '@/components/NotificationBell';
 import logo from '@/assets/GainX_logo.png';
-import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Upload, Camera } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard', roles: 'all' },
@@ -20,10 +22,25 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { user, isGuest, signOut, setGuest } = useAuthStore();
+  const { user, isGuest, signOut, setGuest, setUser } = useAuthStore();
   const { role, isAdmin, isGuestRole } = useRole();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/avatar.${ext}`;
+    await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+    setUser({ ...user, avatar_url: publicUrl });
+    setUploading(false);
+  };
 
   const filteredNav = navItems.filter((item) => {
     if (item.roles === 'all') return true;
@@ -56,9 +73,10 @@ export default function AppLayout() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                  isActive ? 'gradient-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+                  isActive ? 'text-white' : 'text-muted-foreground hover:bg-accent'
                 }`
               }
+              style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #F97316)' } : {}}
             >
               <item.icon size={18} />
               {item.label}
@@ -95,11 +113,45 @@ export default function AppLayout() {
             </div>
           )}
           <NotificationBell />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-              {(user?.name || 'G')[0].toUpperCase()}
-            </div>
-          </div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  (user?.name || 'G')[0].toUpperCase()
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56 p-3 space-y-2">
+              <div className="flex items-center gap-2 pb-2 border-b border-border">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user?.name || 'G')[0].toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{isGuest ? 'Guest' : user?.name}</p>
+                  <RoleBadge role={role} />
+                </div>
+              </div>
+              {!isGuest && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition"
+                >
+                  <Camera size={16} /> {uploading ? 'Uploading...' : 'Upload Photo'}
+                </button>
+              )}
+              <button onClick={handleSignOut} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition">
+                <LogOut size={16} /> {isGuest ? 'Exit Guest Mode' : 'Sign Out'}
+              </button>
+            </PopoverContent>
+          </Popover>
         </header>
 
         {/* Mobile Nav Overlay */}
@@ -115,9 +167,10 @@ export default function AppLayout() {
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                        isActive ? 'gradient-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+                        isActive ? 'text-white' : 'text-muted-foreground hover:bg-accent'
                       }`
                     }
+                    style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #F97316)' } : {}}
                   >
                     <item.icon size={18} />
                     {item.label}
