@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { ZONES, ZONE_COLORS } from '@/lib/constants';
 import { daysUntilEvent } from '@/lib/dateUtils';
 import { BarChart3, CheckSquare, AlertTriangle, CalendarDays, DollarSign } from 'lucide-react';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 
 export default function Reports() {
   const { user } = useAuthStore();

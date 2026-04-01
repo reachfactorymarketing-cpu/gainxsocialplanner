@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { RoleBadge } from '@/components/Badges';
 import { CHANNELS } from '@/lib/constants';
 import { Send, Hash } from 'lucide-react';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 
 export default function Chat() {
   const { user } = useAuthStore();

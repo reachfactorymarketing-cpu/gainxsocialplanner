@@ -5,6 +5,7 @@ import { useRole } from '@/hooks/useRole';
 import { ZONES } from '@/lib/constants';
 import { ZoneBadge } from '@/components/Badges';
 import { FileText, StickyNote, Search, Plus, Pin, X, Trash2 } from 'lucide-react';
+import { ContextualTooltip } from '@/components/ContextualTooltip';
 
 const FOLDERS = ['All', 'Marketing', 'Operations', 'Vendors', 'Finance', 'Templates'];
 const STICKY_COLORS = ['#FDE68A', '#FBCFE8', '#BBF7D0', '#BFDBFE', '#DDD6FE', '#FED7AA', '#E5E7EB', '#FECACA'];
