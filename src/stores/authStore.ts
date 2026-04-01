@@ -37,31 +37,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   initialize: async () => {
     set({ isLoading: true });
-    
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
+
+    const fetchProfile = async (userId: string) => {
+      try {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', session.user.id)
+          .eq('id', userId)
           .single();
-        
         if (profile) {
-          set({
-            user: profile as unknown as Profile,
-            isGuest: false,
-            isLoading: false,
-          });
+          set({ user: profile as unknown as Profile, isGuest: false, isLoading: false });
         } else {
           set({ isLoading: false });
         }
-      } else {
-        set({ user: null, isLoading: false });
+      } catch {
+        set({ isLoading: false });
       }
-    });
+    };
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    // Listen for future auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          set({ user: null, isLoading: false });
+        }
+      }
+    );
+
+    // Check current session
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        set({ isLoading: false });
+      }
+    } catch {
       set({ isLoading: false });
     }
   },
