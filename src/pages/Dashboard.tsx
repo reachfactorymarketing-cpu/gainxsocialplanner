@@ -73,7 +73,7 @@ export default function Dashboard() {
   useRealtimeSubscription('messages', fetchAll);
   useRealtimeSubscription('documents', fetchAll);
 
-  const myTasks = isAdmin ? tasks : isGuestRole ? tasks : tasks.filter(t => t.assignee_id === user?.id);
+  const myTasks = tasks; // already filtered by role in fetchAll
   // FIX 6: Filter out Done tasks, sort overdue first
   const openTasks = myTasks
     .filter(t => t.status !== 'Done')
