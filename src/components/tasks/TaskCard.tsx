@@ -9,9 +9,10 @@ interface TaskCardProps {
   task: any;
   onClick: () => void;
   canManage: boolean;
+  assignee?: any;
 }
 
-export default function TaskCard({ task, onClick, canManage }: TaskCardProps) {
+export default function TaskCard({ task, onClick, canManage, assignee }: TaskCardProps) {
   const done = task.status === 'Done';
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -50,11 +51,20 @@ export default function TaskCard({ task, onClick, canManage }: TaskCardProps) {
             <ZoneBadge zone={task.zone} />
             <PriorityBadge priority={task.priority} />
           </div>
-          {task.due_date && (
-            <p className={`text-xs mt-1.5 ${isOverdue(task.due_date) ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-              {humanDate(task.due_date)}
-            </p>
-          )}
+          <div className="flex items-center justify-between mt-1.5">
+            {task.due_date && (
+              <p className={`text-xs ${isOverdue(task.due_date) ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                {humanDate(task.due_date)}
+              </p>
+            )}
+            {assignee && (
+              <div className="flex items-center gap-1 ml-auto">
+                <div className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center text-[9px] font-bold" style={{ background: assignee.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+                  {assignee.avatar_url ? <img src={assignee.avatar_url} alt="" className="w-full h-full object-cover" /> : (assignee.name || '?')[0].toUpperCase()}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
