@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell, CheckSquare, Megaphone, MessageCircle, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 const ICONS: Record<string, any> = {
   task: CheckSquare,
