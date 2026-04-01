@@ -4,8 +4,10 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge } from '@/components/Badges';
 import { NotificationBell } from '@/components/NotificationBell';
 import logo from '@/assets/GainX_logo.png';
-import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Upload, Camera } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard', roles: 'all' },
