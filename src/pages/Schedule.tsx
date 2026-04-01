@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRole } from '@/hooks/useRole';
 import { ZoneBadge } from '@/components/Badges';
 import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { Plus, X, Calendar } from 'lucide-react';
 import { ZONES } from '@/lib/constants';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const PHASES = ['setup', 'event', 'breakdown'] as const;
 const PHASE_LABELS: Record<string, string> = { setup: '🔧 Setup', event: '🎉 Event', breakdown: '📦 Breakdown' };
