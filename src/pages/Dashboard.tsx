@@ -212,7 +212,8 @@ export default function Dashboard() {
           )}
         </div>
 
-      {/* FIX 3: Recent Messages Card */}
+      {/* Recent Messages - hide for guests */}
+      {!isGuestRole && (
       <div className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
         <h2 className="font-semibold mb-3 flex items-center gap-2"><MessageCircle size={18} /> Recent Messages</h2>
         {recentMessages.length === 0 ? (
