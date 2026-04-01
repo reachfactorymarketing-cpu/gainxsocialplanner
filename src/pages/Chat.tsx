@@ -7,7 +7,7 @@ import { Send, Hash } from 'lucide-react';
 
 export default function Chat() {
   const { user } = useAuthStore();
-  const [channel, setChannel] = useState(CHANNELS[0]);
+  const [channel, setChannel] = useState<string>(CHANNELS[0]);
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [profiles, setProfiles] = useState<Record<string, any>>({});
