@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(false);
+  
 
   useEffect(() => {
     if (user && !user.has_seen_welcome && !isGuest) {
