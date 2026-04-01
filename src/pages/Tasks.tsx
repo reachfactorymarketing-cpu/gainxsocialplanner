@@ -9,6 +9,8 @@ import { ContextualTooltip } from '@/components/ContextualTooltip';
 import { humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { Plus, X, MessageSquare, Save, Trash2 } from 'lucide-react';
 import KanbanColumn from '@/components/tasks/KanbanColumn';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export default function Tasks() {
   const { user } = useAuthStore();
