@@ -4,10 +4,11 @@ import { useRole } from '@/hooks/useRole';
 import { RoleBadge } from '@/components/Badges';
 import { NotificationBell } from '@/components/NotificationBell';
 import logo from '@/assets/GainX_logo.png';
-import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Upload, Camera } from 'lucide-react';
+import { Home, CheckSquare, Calendar, FileText, MessageCircle, Users, BarChart3, Store, Megaphone, LogOut, Menu, X, Camera, User, MoreHorizontal } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ProfileSettingsModal from '@/components/ProfileSettingsModal';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard', roles: 'all' },
@@ -21,12 +22,21 @@ const navItems = [
   { to: '/announcements', icon: Megaphone, label: 'Announcements', roles: 'admin' },
 ];
 
+const mobileBottomItems = [
+  { to: '/', icon: Home, label: 'Home' },
+  { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
+  { to: '/schedule', icon: Calendar, label: 'Schedule' },
+  { to: '/documents', icon: FileText, label: 'Docs' },
+  { to: '/chat', icon: MessageCircle, label: 'Chat' },
+];
+
 export default function AppLayout() {
   const { user, isGuest, signOut, setGuest, setUser } = useAuthStore();
   const { role, isAdmin, isGuestRole } = useRole();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,10 +83,10 @@ export default function AppLayout() {
               end={item.to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                  isActive ? 'text-white' : 'text-muted-foreground hover:bg-accent'
+                  isActive ? 'text-white shadow-md' : 'text-muted-foreground hover:bg-accent'
                 }`
               }
-              style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #F97316)' } : {}}
+              style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #EC4899, #F97316)' } : {}}
             >
               <item.icon size={18} />
               {item.label}
@@ -85,8 +95,8 @@ export default function AppLayout() {
         </nav>
         <div className="p-3 border-t border-border">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-              {(user?.name || 'G')[0].toUpperCase()}
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
+              {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : (user?.name || 'G')[0].toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{isGuest ? 'Guest' : user?.name}</p>
@@ -101,6 +111,9 @@ export default function AppLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Gradient top border */}
+        <div style={{ background: 'linear-gradient(90deg, #7C3AED, #EC4899, #F97316)' }} className="h-0.5 w-full shrink-0" />
+
         {/* Header */}
         <header className="h-14 border-b border-border bg-card flex items-center px-4 gap-3 shrink-0">
           <button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -108,7 +121,7 @@ export default function AppLayout() {
           </button>
           <div className="flex-1" />
           {isGuestRole && (
-            <div className="text-xs bg-gainx-amber/10 text-gainx-amber px-3 py-1 rounded-full font-medium">
+            <div className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">
               Guest Mode — Read Only
             </div>
           )}
@@ -124,7 +137,7 @@ export default function AppLayout() {
                 )}
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-56 p-3 space-y-2">
+            <PopoverContent align="end" className="w-60 p-3 space-y-2">
               <div className="flex items-center gap-2 pb-2 border-b border-border">
                 <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold" style={{ background: user?.avatar_url ? 'none' : 'linear-gradient(135deg, #7C3AED, #F97316)', color: 'white' }}>
                   {user?.avatar_url ? (
@@ -139,13 +152,21 @@ export default function AppLayout() {
                 </div>
               </div>
               {!isGuest && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition"
-                >
-                  <Camera size={16} /> {uploading ? 'Uploading...' : 'Upload Photo'}
-                </button>
+                <>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition"
+                  >
+                    <Camera size={16} /> {uploading ? 'Uploading...' : 'Upload Photo'}
+                  </button>
+                  <button
+                    onClick={() => setShowProfileSettings(true)}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition"
+                  >
+                    <User size={16} /> Edit Profile
+                  </button>
+                </>
               )}
               <button onClick={handleSignOut} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full px-2 py-1.5 rounded-md hover:bg-accent transition">
                 <LogOut size={16} /> {isGuest ? 'Exit Guest Mode' : 'Sign Out'}
@@ -170,7 +191,7 @@ export default function AppLayout() {
                         isActive ? 'text-white' : 'text-muted-foreground hover:bg-accent'
                       }`
                     }
-                    style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #F97316)' } : {}}
+                    style={({ isActive }) => isActive ? { background: 'linear-gradient(135deg, #7C3AED, #EC4899, #F97316)' } : {}}
                   >
                     <item.icon size={18} />
                     {item.label}
@@ -188,21 +209,27 @@ export default function AppLayout() {
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex z-30">
-        {filteredNav.slice(0, 5).map((item) => (
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)] flex z-30">
+        {mobileBottomItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center py-2 text-xs font-semibold transition ${isActive ? "text-purple-600" : "text-gray-500"}`
+              `flex-1 flex flex-col items-center py-2 text-xs font-semibold transition ${isActive ? "text-purple-600" : "text-gray-400"}`
             }
           >
-            <item.icon size={20} />
-            <span className="mt-0.5">{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <item.icon size={20} className={isActive ? 'text-purple-600' : 'text-gray-400'} />
+                <span className="mt-0.5">{item.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
+
+      {showProfileSettings && <ProfileSettingsModal onClose={() => setShowProfileSettings(false)} />}
     </div>
   );
 }
