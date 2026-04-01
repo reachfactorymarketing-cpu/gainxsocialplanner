@@ -68,11 +68,8 @@ export default function AppLayout() {
     setUploading(false);
   };
 
-  const filteredNav = navItems.filter((item) => {
-    if (item.roles === 'all') return true;
-    if (item.roles === 'authenticated') return !isGuestRole;
-    return item.roles.split(',').some(r => r === role);
-  });
+  const filteredNav = NAV_ITEMS.filter((item) => item.access.includes(role));
+  const mobileItems = getMobileItems(role);
 
   const handleSignOut = async () => {
     if (isGuest) {
