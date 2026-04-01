@@ -22,10 +22,25 @@ const navItems = [
 ];
 
 export default function AppLayout() {
-  const { user, isGuest, signOut, setGuest } = useAuthStore();
+  const { user, isGuest, signOut, setGuest, setUser } = useAuthStore();
   const { role, isAdmin, isGuestRole } = useRole();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/avatar.${ext}`;
+    await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+    setUser({ ...user, avatar_url: publicUrl });
+    setUploading(false);
+  };
 
   const filteredNav = navItems.filter((item) => {
     if (item.roles === 'all') return true;
