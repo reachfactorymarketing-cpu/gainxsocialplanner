@@ -21,15 +21,21 @@ import NotFound from './pages/NotFound';
 const queryClient = new QueryClient();
 
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { user, isGuest, isLoading, initialize } = useAuthStore();
+  const { user, isGuest, isLoading, initialize, setGuest } = useAuthStore();
 
   useEffect(() => {
+    // Handle ?guest=true param (from role preview)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('guest') === 'true') {
+      setGuest(true);
+      window.history.replaceState({}, '', '/');
+    }
     initialize();
     const timeout = setTimeout(() => {
       useAuthStore.setState({ isLoading: false });
     }, 3000);
     return () => clearTimeout(timeout);
-  }, [initialize]);
+  }, [initialize, setGuest]);
 
   if (isLoading) {
     return (
