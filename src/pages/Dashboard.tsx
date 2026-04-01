@@ -7,7 +7,7 @@ import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtil
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
 import { CalendarDays, CheckSquare, FileText, MessageCircle, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import WelcomeModal from '@/components/WelcomeModal';
+
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Dashboard() {
