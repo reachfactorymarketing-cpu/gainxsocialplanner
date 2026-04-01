@@ -6,6 +6,7 @@ import { RoleBadge, ZoneBadge } from '@/components/Badges';
 import { daysUntilEvent, humanDate, isOverdue, isDueToday } from '@/lib/dateUtils';
 import { EVENT_NAME, EVENT_DATE, EVENT_VENUE, EVENT_TIME } from '@/lib/constants';
 import { CalendarDays, CheckSquare, FileText } from 'lucide-react';
+import WelcomeModal from '@/components/WelcomeModal';
 
 export default function Dashboard() {
   const { user, isGuest } = useAuthStore();
@@ -14,6 +15,13 @@ export default function Dashboard() {
   const [schedule, setSchedule] = useState<any[]>([]);
   const [pinnedDocs, setPinnedDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (user && !user.has_seen_welcome && !isGuest) {
+      setShowWelcome(true);
+    }
+  }, [user, isGuest]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -48,6 +56,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
+
       {/* Hero */}
       <div className="rounded-2xl p-6 text-white" style={{background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #F97316 100%)'}}>
         <div className="flex items-center gap-3 mb-3">
@@ -83,9 +93,7 @@ export default function Dashboard() {
       {/* Admin Getting Started */}
       {isAdmin && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <h3 className="font-bold text-amber-800 mb-2">
-            🚀 Getting Started
-          </h3>
+          <h3 className="font-bold text-amber-800 mb-2">🚀 Getting Started</h3>
           <div className="text-sm text-amber-700 space-y-1">
             <p>1. <strong>Add team members</strong> → People & Roles → Add Person</p>
             <p>2. <strong>Assign tasks</strong> → Task Board → click any card</p>
@@ -94,15 +102,13 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Guest Banner */}
       {isGuestRole && (
-        <div className="bg-gainx-amber/10 border border-gainx-amber/30 rounded-xl p-4 text-sm">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
           You're viewing as a guest. <a href="/login" className="font-medium text-primary underline">Sign in</a> for full access.
         </div>
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* My Tasks */}
         <div className="bg-card border border-border rounded-xl p-4">
           <h2 className="font-semibold mb-3 flex items-center gap-2"><CheckSquare size={18} /> My Tasks</h2>
           {myTasks.length === 0 ? (
@@ -110,18 +116,14 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-2">
               {myTasks.slice(0, 6).map((task) => (
-                <div
-                  key={task.id}
+                <div key={task.id}
                   className={`p-3 rounded-lg border ${
-                    task.status === 'Done' ? 'border-gainx-emerald/30 bg-gainx-emerald/5' :
-                    isOverdue(task.due_date) ? 'border-destructive/50 bg-destructive/5' :
-                    isDueToday(task.due_date) ? 'border-gainx-amber/50 bg-gainx-amber/5' :
+                    task.status === 'Done' ? 'border-green-300 bg-green-50' :
+                    isOverdue(task.due_date) ? 'border-red-300 bg-red-50' :
+                    isDueToday(task.due_date) ? 'border-amber-300 bg-amber-50' :
                     'border-border'
-                  }`}
-                >
-                  <p className={`text-sm font-medium ${task.status === 'Done' ? 'line-through text-muted-foreground' : ''}`}>
-                    {task.title}
-                  </p>
+                  }`}>
+                  <p className={`text-sm font-medium ${task.status === 'Done' ? 'line-through text-muted-foreground' : ''}`}>{task.title}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <ZoneBadge zone={task.zone} />
                     <span className="text-xs text-muted-foreground">{humanDate(task.due_date)}</span>
@@ -132,7 +134,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Schedule Preview */}
         <div className="bg-card border border-border rounded-xl p-4">
           <h2 className="font-semibold mb-3 flex items-center gap-2"><CalendarDays size={18} /> Schedule</h2>
           {schedule.length === 0 ? (
@@ -156,7 +157,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Pinned Docs */}
       {pinnedDocs.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
           <h2 className="font-semibold mb-3 flex items-center gap-2"><FileText size={18} /> Pinned Documents</h2>
@@ -173,4 +173,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
