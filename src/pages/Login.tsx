@@ -39,7 +39,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
-      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6 max-h-[95vh] overflow-y-auto">
         <div className="flex flex-col items-center space-y-3">
           <img src={logo} alt="Gain X Social" className="w-20 h-20" />
           <h1 className="text-2xl font-bold gradient-text">Gain X Social Planner</h1>
@@ -90,30 +90,35 @@ const Login = () => {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-          <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or</span></div>
+          <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">Explore by role</span></div>
         </div>
 
-        <button
-          onClick={handleGuestAccess}
-          className="w-full border border-border rounded-lg py-2.5 text-sm font-medium hover:bg-accent transition"
-        >
-          Continue as Guest (Read-Only)
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          {DEMO_CREDENTIALS.map((cred) => (
+            <button
+              key={cred.email}
+              onClick={() => fillDemo(cred)}
+              className="text-left bg-white border border-gray-200 rounded-xl p-3 hover:border-purple-300 hover:shadow-sm transition-all"
+            >
+              <span className={`inline-block text-[10px] font-semibold text-white px-2 py-0.5 rounded-full mb-1.5 ${cred.color}`}>
+                {cred.role}
+              </span>
+              <p className="text-xs font-medium text-foreground">{cred.label}</p>
+              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{cred.description}</p>
+            </button>
+          ))}
 
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground font-medium">Demo Accounts:</p>
-          <div className="space-y-1.5">
-            {DEMO_CREDENTIALS.map((cred) => (
-              <button
-                key={cred.email}
-                onClick={() => fillDemo(cred)}
-                className="w-full text-left text-xs bg-muted rounded-md px-3 py-2 hover:bg-accent transition"
-              >
-                <span className="font-medium">{cred.role}:</span>{' '}
-                <span className="text-muted-foreground">{cred.email} / {cred.password}</span>
-              </button>
-            ))}
-          </div>
+          {/* Guest card */}
+          <button
+            onClick={handleGuestAccess}
+            className="text-left bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 hover:border-purple-300 hover:shadow-sm transition-all"
+          >
+            <span className="inline-block text-[10px] font-semibold text-white px-2 py-0.5 rounded-full mb-1.5 bg-gainx-gray">
+              Guest
+            </span>
+            <p className="text-xs font-medium text-foreground">Guest View</p>
+            <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Read-only event overview</p>
+          </button>
         </div>
       </div>
     </div>
